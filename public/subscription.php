@@ -1,5 +1,5 @@
 <?php
-// 1. Define a private folder for ComixPass sessions
+// 1. Define a private folder for ComisKini sessions
 $sessionPath = __DIR__ . '/../cache/sessions';
 if (!is_dir($sessionPath)) {
     mkdir($sessionPath, 0755, true);
@@ -57,7 +57,7 @@ if ($user['subscription_ends_at']) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My ComixPass - Subscription</title>
+    <title>My ComisKini - Subscription</title>
     <meta name="referrer" content="no-referrer">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -80,7 +80,7 @@ if ($user['subscription_ends_at']) {
                 <svg class="w-7 h-7 sm:w-8 sm:h-8 text-accent group-hover:scale-110 transition-transform" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24">
                     <path d="M21 11.5C21 16.75 16.97 21 12 21c-1.66 0-3.21-.42-4.55-1.16L3 21l1.5-4.2C3.55 15.35 3 13.5 3 11.5 3 6.25 7.03 2 12 2s9 4.25 9 9.5z M12 6 l1.5 4 h4 l-3.2 2.5 l1.2 4 l-3.5 -2.6 l-3.5 2.6 l1.2 -4 l-3.2 -2.5 h4 z"/>
                 </svg>
-                <span class="text-lg sm:text-xl font-bold tracking-wider dark:text-white text-black">COMIXPASS</span>
+                <span class="text-lg sm:text-xl font-bold tracking-wider dark:text-white text-black">COMISKINI</span>
             </a>
 
             <div class="flex-grow max-w-2xl relative hidden md:flex items-center">
@@ -119,7 +119,7 @@ if ($user['subscription_ends_at']) {
                         </div>
                         <div class="absolute right-0 mt-2 w-48 dark:bg-[#1a1f29] bg-white border dark:border-gray-700 border-gray-200 rounded shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                             <a href="profile.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent">My Library</a>
-                            <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent border-b dark:border-gray-700 border-gray-200">ComixPass Status</a>
+                            <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent border-b dark:border-gray-700 border-gray-200">ComisKini Status</a>
                             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                                 <a href="admin.php" class="block px-4 py-3 sm:py-2 text-sm text-accent font-bold dark:hover:bg-[#262c38] hover:bg-gray-100 border-b dark:border-gray-700 border-gray-200 flex justify-between items-center">
                                     Admin Panel
@@ -171,7 +171,7 @@ if ($user['subscription_ends_at']) {
         </div>
 
         <div class="dark:bg-[#1a1f29] bg-gray-50 border dark:border-gray-800 border-gray-200 rounded-xl p-8 transition-colors">
-            <h2 class="text-xl font-bold dark:text-white text-black mb-2">Redeem ComixPass Code</h2>
+            <h2 class="text-xl font-bold dark:text-white text-black mb-2">Redeem ComisKini Code</h2>
             <p class="text-sm dark:text-gray-400 text-gray-600 mb-6">Purchased a subscription code from our Shopee store? Enter it below to unlock premium access. Time is automatically added to your current balance.</p>
             
             <div id="voucherMsg" class="hidden mb-4 p-3 rounded text-sm font-bold text-center"></div>
@@ -232,7 +232,7 @@ if ($user['subscription_ends_at']) {
             }).then(res => res.json()).then(data => {
                 if (data.success) {
                     msgBox.className = 'mb-4 p-3 rounded text-sm font-bold text-center bg-green-900/50 border border-green-500 text-green-500';
-                    msgBox.innerText = `Success! Your ComixPass is now valid until ${data.new_expiry}. Reloading...`;
+                    msgBox.innerText = `Success! Your ComisKini is now valid until ${data.new_expiry}. Reloading...`;
                     codeInput.value = '';
                     setTimeout(() => window.location.reload(), 2000);
                 } else {

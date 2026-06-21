@@ -1,6 +1,6 @@
 <?php
 // public/manga.php
-// 1. Define a private folder for ComixPass sessions
+// 1. Define a private folder for ComisKini sessions
 $sessionPath = __DIR__ . '/../cache/sessions';
 if (!is_dir($sessionPath)) {
     mkdir($sessionPath, 0755, true);
@@ -126,7 +126,7 @@ $genres = $manga['genres'] ? htmlspecialchars($manga['genres']) : 'N/A';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($manga['title']) ?> - ComixPass</title>
+    <title><?= htmlspecialchars($manga['title']) ?> - ComisKini</title>
     <meta name="referrer" content="no-referrer">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -153,7 +153,7 @@ $genres = $manga['genres'] ? htmlspecialchars($manga['genres']) : 'N/A';
                 <svg class="w-7 h-7 sm:w-8 sm:h-8 text-accent group-hover:scale-110 transition-transform" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24">
                     <path d="M21 11.5C21 16.75 16.97 21 12 21c-1.66 0-3.21-.42-4.55-1.16L3 21l1.5-4.2C3.55 15.35 3 13.5 3 11.5 3 6.25 7.03 2 12 2s9 4.25 9 9.5z M12 6 l1.5 4 h4 l-3.2 2.5 l1.2 4 l-3.5 -2.6 l-3.5 2.6 l1.2 -4 l-3.2 -2.5 h4 z"/>
                 </svg>
-                <span class="text-lg sm:text-xl font-bold tracking-wider dark:text-white text-black">COMIXPASS</span>
+                <span class="text-lg sm:text-xl font-bold tracking-wider dark:text-white text-black">COMISKINI</span>
             </a>
 
             <div class="flex-grow max-w-2xl relative hidden md:flex items-center">
@@ -188,7 +188,7 @@ $genres = $manga['genres'] ? htmlspecialchars($manga['genres']) : 'N/A';
                         </div>
                         <div class="absolute right-0 mt-2 w-48 dark:bg-[#1a1f29] bg-white border dark:border-gray-700 border-gray-200 rounded shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                             <a href="profile.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent">My Library</a>
-                            <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent border-b dark:border-gray-700 border-gray-200">ComixPass Status</a>
+                            <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent border-b dark:border-gray-700 border-gray-200">ComisKini Status</a>
                             <button onclick="logoutUser()" class="w-full text-left px-4 py-3 sm:py-2 text-sm text-red-500 hover:bg-red-500/10 font-bold">Logout</button>
                         </div>
                     </div>
@@ -388,7 +388,7 @@ $genres = $manga['genres'] ? htmlspecialchars($manga['genres']) : 'N/A';
                         <label class="block text-xs font-bold dark:text-gray-400 text-gray-600 mb-1">Password</label>
                         <input type="password" id="loginPassword" required class="w-full dark:bg-[#1a1f29] bg-gray-50 border dark:border-gray-700 border-gray-300 rounded p-2.5 dark:text-white text-black text-sm focus:border-accent focus:outline-none">
                     </div>
-                    <button type="submit" class="w-full bg-accent hover:bg-cyan-400 text-black font-black py-3 rounded mt-2 shadow-md transition-colors">ENTER COMIXPASS</button>
+                    <button type="submit" class="w-full bg-accent hover:bg-cyan-400 text-black font-black py-3 rounded mt-2 shadow-md transition-colors">ENTER COMISKINI</button>
                 </form>
                 <form id="registerForm" onsubmit="handleAuth(event, 'register')" class="hidden flex flex-col gap-4">
                     <div style="display: none; position: absolute; left: -9999px;" aria-hidden="true">

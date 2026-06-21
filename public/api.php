@@ -1,6 +1,6 @@
 <?php
 // public/api.php
-// 1. Define a private folder for ComixPass sessions
+// 1. Define a private folder for ComisKini sessions
 $sessionPath = __DIR__ . '/../cache/sessions';
 if (!is_dir($sessionPath)) {
     mkdir($sessionPath, 0755, true);

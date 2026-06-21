@@ -35,7 +35,7 @@ function fetchMangadexApi($url) {
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5); 
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     
-    curl_setopt($ch, CURLOPT_USERAGENT, 'ComixPass/3.0');
+    curl_setopt($ch, CURLOPT_USERAGENT, 'ComisKini/3.0');
     $response = curl_exec($ch);
 
     if (curl_errno($ch)) {

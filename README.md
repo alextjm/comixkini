@@ -1,1 +1,1 @@
-# comixpass
+# ComisKini
