@@ -23,7 +23,7 @@ if (empty($mangas)) {
     exit;
 }
 
-$updateStmt = $pdo->prepare("UPDATE cp_titles SET title = ?, alt_titles = ?, is_deep_synced = 1 WHERE manga_id = ?");
+$updateStmt = $pdo->prepare("UPDATE cp_titles SET title = ?, alt_titles = ?, author = ?, status = ?, content_rating = ?, is_deep_synced = 1 WHERE manga_id = ?");
 $markSyncedStmt = $pdo->prepare("UPDATE cp_titles SET is_deep_synced = 1 WHERE manga_id = ?");
 
 $processed = 0;
@@ -55,37 +55,49 @@ foreach ($mangas as $manga) {
     @$dom->loadHTML($html);
     $xpath = new DOMXPath($dom);
 
-    // Extract Judul Alternatif
+    // Extract Judul Alternatif, Author, Status, Rating
     $altTitleNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Judul Alternatif")]]/td[2]')->item(0);
+    $authorNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Author")]]/td[2]')->item(0);
+    $statusNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Status")]]/td[2]')->item(0);
+    $ratingNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Rating")]]/td[2]')->item(0);
     
-    if ($altTitleNode) {
-        $extractedAltTitle = trim($altTitleNode->nodeValue);
-        
-        // If alt title exists, is not empty, not a dash, and not identical to the current english title
-        if (!empty($extractedAltTitle) && $extractedAltTitle !== '-' && strtolower($extractedAltTitle) !== strtolower($manga['title'])) {
-            
-            // SWAP LOGIC:
-            // New Title = Judul Alternatif (Indonesian/Malay)
-            // New Alt Title = Current Title (English)
-            $newTitle = $extractedAltTitle;
-            
-            // If it already had an alt_titles string, append to it, otherwise just use the english title
-            $newAltTitles = empty($manga['alt_titles']) ? $manga['title'] : $manga['alt_titles'] . ', ' . $manga['title'];
-            
-            echo "  [+] Swapping Title! \n";
-            echo "      Main Title: {$newTitle}\n";
-            echo "      Alt Title: {$newAltTitles}\n";
-            
-            $updateStmt->execute([$newTitle, $newAltTitles, $manga['manga_id']]);
+    $extractedAltTitle = $altTitleNode ? trim($altTitleNode->nodeValue) : '';
+    $extractedAuthor = $authorNode ? trim($authorNode->nodeValue) : '';
+    $extractedStatus = $statusNode ? strtolower(trim($statusNode->nodeValue)) : '';
+    $extractedRating = $ratingNode ? trim($ratingNode->nodeValue) : '';
+
+    $newTitle = $manga['title'];
+    $newAltTitles = $manga['alt_titles'];
+    $didSwap = false;
+    
+    // If alt title exists, is not empty, not a dash, and not identical to the current english title
+    if (!empty($extractedAltTitle) && $extractedAltTitle !== '-' && strtolower($extractedAltTitle) !== strtolower($manga['title'])) {
+        // SWAP LOGIC:
+        $newTitle = $extractedAltTitle;
+        $newAltTitles = empty($manga['alt_titles']) ? $manga['title'] : $manga['alt_titles'] . ', ' . $manga['title'];
+        $didSwap = true;
+    }
+
+    // Default values if empty
+    $finalAuthor = !empty($extractedAuthor) && $extractedAuthor !== '-' ? $extractedAuthor : 'Unknown';
+    $finalStatus = !empty($extractedStatus) && $extractedStatus !== '-' ? $extractedStatus : 'ongoing';
+    
+    // Map rating roughly
+    $finalRating = 'safe';
+    if (stripos($extractedRating, '17+') !== false) $finalRating = 'suggestive';
+    elseif (stripos($extractedRating, '18+') !== false || stripos($extractedRating, '21+') !== false) $finalRating = 'erotica';
+    elseif (!empty($extractedRating) && $extractedRating !== '-') $finalRating = $extractedRating; // Just save whatever text they have if we can't map it
+    
+    if ($didSwap || $finalAuthor !== 'Unknown' || $finalStatus !== 'ongoing' || $finalRating !== 'safe') {
+        if ($didSwap) {
+            echo "  [+] Swapping Title! Main: {$newTitle}\n";
             $swapped++;
         } else {
-            // Nothing to swap, just mark as synced
-            echo "  [-] No valid alternative title found to swap.\n";
-            $markSyncedStmt->execute([$manga['manga_id']]);
+            echo "  [+] Updating extra metadata (Author/Status/Rating)\n";
         }
+        $updateStmt->execute([$newTitle, $newAltTitles, $finalAuthor, $finalStatus, $finalRating, $manga['manga_id']]);
     } else {
-        // No alt title row found
-        echo "  [-] No alternative title row found.\n";
+        echo "  [-] No alternative title or metadata to update.\n";
         $markSyncedStmt->execute([$manga['manga_id']]);
     }
 
