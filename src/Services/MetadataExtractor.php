@@ -8,10 +8,10 @@ class MetadataExtractor {
         $mangaId = $manga['id'];
         $attributes = $manga['attributes'];
 
-        // 1. Universal Title Extraction (EN > MS > ID > Original)
-        $title = $attributes['title']['en'] ?? null;
+        // 1. Title Extraction (MS > ID)
+        $title = $attributes['title']['ms'] ?? $attributes['title']['id'] ?? null;
         if (!$title && !empty($attributes['altTitles'])) {
-            foreach (['en', 'ms', 'id'] as $lang) {
+            foreach (['ms', 'id'] as $lang) {
                 foreach ($attributes['altTitles'] as $alt) {
                     if (isset($alt[$lang])) { 
                         $title = $alt[$lang]; 
@@ -21,11 +21,11 @@ class MetadataExtractor {
             }
         }
         if (!$title) {
-            $title = current($attributes['title']) ?? 'Unknown Title';
+            $title = 'Unknown Title';
         }
 
-        // 2. Description
-        $description = is_array($attributes['description']) ? ($attributes['description']['en'] ?? '') : ($attributes['description'] ?? '');
+        // 2. Description (MS > ID)
+        $description = is_array($attributes['description']) ? ($attributes['description']['ms'] ?? $attributes['description']['id'] ?? '') : '';
 
         // 3. English Chapter Counter
         $aggUrl = "https://api.mangadex.org/manga/$mangaId/aggregate?translatedLanguage[]=ms&translatedLanguage[]=id";

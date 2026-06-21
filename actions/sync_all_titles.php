@@ -96,11 +96,24 @@ while (true) {
         // Track the created at time for our pagination bypass
         $lastCreatedAt = $attributes['createdAt'];
 
-        $title = $attributes['title']['en'] ?? reset($attributes['title']) ?? '';
-        $description = $attributes['description']['en'] ?? '';
+        // Title Extraction (MS > ID)
+        $title = $attributes['title']['ms'] ?? $attributes['title']['id'] ?? '';
+        if (empty($title) && !empty($attributes['altTitles'])) {
+            foreach (['ms', 'id'] as $lang) {
+                foreach ($attributes['altTitles'] as $alt) {
+                    if (isset($alt[$lang])) { 
+                        $title = $alt[$lang]; 
+                        break 2;
+                    }
+                }
+            }
+        }
 
-        // Exclude "Rubbish" Titles Logic
-        if (empty(trim($title)) || strlen(trim($description)) < 20) {
+        // Description Extraction (MS > ID)
+        $description = is_array($attributes['description']) ? ($attributes['description']['ms'] ?? $attributes['description']['id'] ?? '') : '';
+
+        // Skip if no MS/ID title or description
+        if (empty(trim($title)) || empty(trim($description))) {
             continue;
         }
 
