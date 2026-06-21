@@ -10,7 +10,7 @@ $maxPages = 50; // Adjust as needed
 $totalProcessed = 0;
 
 for ($page = $startPage; $page <= $maxPages; $page++) {
-    $url = "https://komiku.org/manga/page/{$page}/";
+    $url = "https://api.komiku.org/manga/page/" . $page . "/";
     echo "Fetching Page: {$page} -> {$url}\n";
     
     $ch = curl_init($url);
