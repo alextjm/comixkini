@@ -75,7 +75,7 @@ for ($page = $startPage; $page <= $maxPages; $page++) {
         $description = $descNode ? trim($descNode->nodeValue) : 'No description available.';
         
         // 4. Default Metadata
-        $genres = 'Manga, Action'; 
+        $genres = 'Action'; 
         $originalLanguage = 'ja';
         $demographic = 'shounen';
         $contentRating = 'safe';
@@ -83,12 +83,53 @@ for ($page = $startPage; $page <= $maxPages; $page++) {
         $status = 'ongoing';
         $author = 'Unknown';
         $artist = 'Unknown';
-        $followers = rand(1000, 50000); // Dummy followers
+        $followers = 0; 
         $lastUpdated = date('Y-m-d H:i:s');
-        $enChapterCount = 100; // Placeholder
+        $enChapterCount = 0; 
         $isActive = 1;
 
-        // Extract via your Service
+        // Extract Category and Genre from .tpe1_inf
+        $tpeNode = $xpath->query('.//div[contains(@class, "tpe1_inf")]', $node)->item(0);
+        if ($tpeNode) {
+            $catNode = $xpath->query('.//b', $tpeNode)->item(0);
+            $category = $catNode ? trim($catNode->nodeValue) : '';
+            
+            if (stripos($category, 'manhwa') !== false) $originalLanguage = 'ko';
+            elseif (stripos($category, 'manhua') !== false) $originalLanguage = 'zh';
+            
+            // Text node is the genre
+            $genreText = trim(str_replace($category, '', $tpeNode->nodeValue));
+            if (!empty($genreText)) $genres = $genreText;
+        }
+
+        // Extract Readers & Colored from .judul2
+        $judul2Node = $xpath->query('.//span[contains(@class, "judul2")]', $node)->item(0);
+        if ($judul2Node) {
+            $jText = $judul2Node->nodeValue;
+            if (stripos($jText, 'berwarna') !== false) {
+                $genres .= ', Colored';
+            }
+            
+            // Extract readers (e.g. 53rb pembaca, 2.4jt pembaca)
+            if (preg_match('/([0-9.]+)(rb|jt|k|m)?\s*pembaca/i', $jText, $m)) {
+                $num = floatval($m[1]);
+                $suffix = strtolower($m[2] ?? '');
+                if ($suffix === 'rb' || $suffix === 'k') $num *= 1000;
+                elseif ($suffix === 'jt' || $suffix === 'm') $num *= 1000000;
+                $followers = (int) $num;
+            }
+        }
+
+        // Extract Latest Chapter
+        $new1Nodes = $xpath->query('.//div[contains(@class, "new1")]', $node);
+        if ($new1Nodes->length > 0) {
+            $latestNode = $new1Nodes->item($new1Nodes->length - 1);
+            $latestText = $latestNode->nodeValue;
+            if (preg_match('/Chapter\s*([0-9.]+)/i', $latestText, $m)) {
+                $enChapterCount = floatval($m[1]);
+            }
+        }
+
         // Flatten array for PDO
         $insertValues = [
             $mangaId, $title, $description, $genres, $originalLanguage, $demographic, $contentRating, $publishYear,
@@ -101,7 +142,7 @@ for ($page = $startPage; $page <= $maxPages; $page++) {
             (manga_id, title, description, genres, original_language, demographic, content_rating, publish_year, status, author, artist, cover_url, external_links, alt_titles, followers, last_updated, en_chapter_count, is_active, consumet_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
-            title=VALUES(title), description=VALUES(description), cover_url=VALUES(cover_url), last_updated=VALUES(last_updated), consumet_id=VALUES(consumet_id)
+            title=VALUES(title), description=VALUES(description), cover_url=VALUES(cover_url), last_updated=VALUES(last_updated), consumet_id=VALUES(consumet_id), genres=VALUES(genres), original_language=VALUES(original_language), followers=VALUES(followers), en_chapter_count=VALUES(en_chapter_count)
         ");
 
         try {
