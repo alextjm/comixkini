@@ -67,7 +67,7 @@ class ChapterFeedService {
             $totalChapters = $cachedData['totalChapters'] ?? 0;
         } else {
             do {
-                $feedUrl = "https://api.mangadex.org/manga/$mangaId/feed?limit=$apiLimit&offset=$currentOffset&order[chapter]=desc&translatedLanguage[]=en&includes[]=scanlation_group" . $contentRatingQuery;
+                $feedUrl = "https://api.mangadex.org/manga/$mangaId/feed?limit=$apiLimit&offset=$currentOffset&order[chapter]=desc&translatedLanguage[]=ms&translatedLanguage[]=id&includes[]=scanlation_group" . $contentRatingQuery;
                 
                 // We use standard fetch here to bypass the 15-min cache for individual chunks
                 $feedData = fetchMangadexApi($feedUrl);
@@ -105,7 +105,7 @@ class ChapterFeedService {
         $firstChapterUrl = '#';
         $startTarget = '_self';
         
-        $firstChapUrlApi = "https://api.mangadex.org/manga/$mangaId/feed?limit=50&order[chapter]=asc&translatedLanguage[]=en" . $contentRatingQuery;
+        $firstChapUrlApi = "https://api.mangadex.org/manga/$mangaId/feed?limit=50&order[chapter]=asc&translatedLanguage[]=ms&translatedLanguage[]=id" . $contentRatingQuery;
         $firstChapData = $this->fetchWithCache($firstChapUrlApi, 3600); 
         
         if (!empty($firstChapData['data'])) {
