@@ -6,7 +6,7 @@ echo "Starting Komiku.org Titles Sync...\n";
 echo "Note: Press CTRL+C to stop. Progress is safe to resume.\n\n";
 
 $startPage = 1;
-$maxPages = 50; // Adjust as needed
+$maxPages = 10000; // Will automatically stop when there are no more pages
 $totalProcessed = 0;
 
 for ($page = $startPage; $page <= $maxPages; $page++) {
