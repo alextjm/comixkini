@@ -1,5 +1,5 @@
 <?php
-// 1. Define a private folder for ComisKini sessions
+// 1. Define a private folder for ComixKini sessions
 $sessionPath = __DIR__ . '/../cache/sessions';
 if (!is_dir($sessionPath)) {
     mkdir($sessionPath, 0755, true);
@@ -89,7 +89,7 @@ $usedCodes = $stmtUsed->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ComisKini Admin</title>
+    <title>ComixKini Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { background: '#0d1015', surface: '#151921', card: '#1a1f29', accent: '#26c6da' } } } }
@@ -104,7 +104,7 @@ $usedCodes = $stmtUsed->fetchAll(PDO::FETCH_ASSOC);
                 <svg class="w-7 h-7 sm:w-8 sm:h-8 text-accent group-hover:scale-110 transition-transform" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24">
                     <path d="M21 11.5C21 16.75 16.97 21 12 21c-1.66 0-3.21-.42-4.55-1.16L3 21l1.5-4.2C3.55 15.35 3 13.5 3 11.5 3 6.25 7.03 2 12 2s9 4.25 9 9.5z M12 6 l1.5 4 h4 l-3.2 2.5 l1.2 4 l-3.5 -2.6 l-3.5 2.6 l1.2 -4 l-3.2 -2.5 h4 z"/>
                 </svg>
-                <span class="text-lg sm:text-xl font-bold tracking-wider text-white">COMISKINI <span class="text-accent text-sm sm:text-base">ADMIN</span></span>
+                <span class="text-lg sm:text-xl font-bold tracking-wider text-white">COMIXKINI <span class="text-accent text-sm sm:text-base">ADMIN</span></span>
             </a>
             </div>
             
@@ -121,7 +121,7 @@ $usedCodes = $stmtUsed->fetchAll(PDO::FETCH_ASSOC);
                     <div class="absolute right-0 mt-2 w-48 bg-[#1a1f29] border border-gray-700 rounded shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                         <a href="index.php" class="block sm:hidden px-4 py-3 text-sm text-gray-300 hover:bg-[#262c38] hover:text-white">Back to Site</a>
                         <a href="profile.php" class="block px-4 py-3 sm:py-2 text-sm text-gray-300 hover:bg-[#262c38] hover:text-accent">My Library</a>
-                        <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm text-gray-300 hover:bg-[#262c38] hover:text-accent border-b border-gray-700">ComisKini Status</a>
+                        <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm text-gray-300 hover:bg-[#262c38] hover:text-accent border-b border-gray-700">ComixKini Status</a>
                         <button onclick="fetch('auth_api.php?action=logout').then(()=>window.location='index.php')" class="w-full text-left px-4 py-3 sm:py-2 text-sm text-red-500 hover:bg-red-500/10 font-bold">Logout</button>
                     </div>
                 </div>

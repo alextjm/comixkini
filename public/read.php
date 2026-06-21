@@ -1,6 +1,6 @@
 <?php
 // public/read.php
-// 1. Define a private folder for ComisKini sessions
+// 1. Define a private folder for ComixKini sessions
 $sessionPath = __DIR__ . '/../cache/sessions';
 if (!is_dir($sessionPath)) {
     mkdir($sessionPath, 0755, true);
@@ -180,7 +180,7 @@ if (!$isLocked) {
                     <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600"></div>
                     <svg class="w-20 h-20 mx-auto text-yellow-500 mb-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
                     
-                    <h2 class="text-3xl font-black text-white mb-4">ComisKini VIP Required</h2>
+                    <h2 class="text-3xl font-black text-white mb-4">ComixKini VIP Required</h2>
                     <p class="text-gray-400 mb-8 leading-relaxed">Chapters 2 and above are reserved for our VIP subscribers. Upgrade your account today to unlock unlimited reading and crystal clear HD artwork!</p>
                     
                     <div class="flex flex-col sm:flex-row justify-center gap-4">
@@ -207,7 +207,7 @@ if (!$isLocked) {
                 <?php if (!$hasHdAccess): ?>
                     <div class="w-full h-[90px] bg-[#1a1f29] border border-gray-800 mb-6 flex flex-col items-center justify-center text-gray-600 text-sm font-bold rounded">
                         <span>Advertisement Space</span>
-                        <a href="subscription.php" class="text-accent text-xs font-normal mt-1 hover:underline">Remove ads with ComisKini</a>
+                        <a href="subscription.php" class="text-accent text-xs font-normal mt-1 hover:underline">Remove ads with ComixKini</a>
                     </div>
                 <?php endif; ?>
 

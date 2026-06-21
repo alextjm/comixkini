@@ -1,1 +1,1 @@
-# ComisKini
+# ComixKini
