@@ -23,7 +23,7 @@ if (empty($mangas)) {
     exit;
 }
 
-$updateStmt = $pdo->prepare("UPDATE cp_titles SET title = ?, alt_titles = ?, author = ?, status = ?, content_rating = ?, is_deep_synced = 1 WHERE manga_id = ?");
+$updateStmt = $pdo->prepare("UPDATE cp_titles SET title = ?, alt_titles = ?, author = ?, status = ?, content_rating = ?, cover_url = ?, is_deep_synced = 1 WHERE manga_id = ?");
 $markSyncedStmt = $pdo->prepare("UPDATE cp_titles SET is_deep_synced = 1 WHERE manga_id = ?");
 
 $processed = 0;
@@ -55,16 +55,18 @@ foreach ($mangas as $manga) {
     @$dom->loadHTML($html);
     $xpath = new DOMXPath($dom);
 
-    // Extract Judul Alternatif, Author, Status, Rating
+    // Extract Judul Alternatif, Author, Status, Rating, Cover
     $altTitleNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Judul Alternatif")]]/td[2]')->item(0);
     $authorNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Author")]]/td[2]')->item(0);
     $statusNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Status")]]/td[2]')->item(0);
     $ratingNode = $xpath->query('//table[contains(@class, "inftable")]//tr[td[contains(text(), "Rating")]]/td[2]')->item(0);
+    $coverNode = $xpath->query('//div[contains(@class, "ims")]//img')->item(0);
     
     $extractedAltTitle = $altTitleNode ? trim($altTitleNode->nodeValue) : '';
     $extractedAuthor = $authorNode ? trim($authorNode->nodeValue) : '';
     $extractedStatus = $statusNode ? strtolower(trim($statusNode->nodeValue)) : '';
     $extractedRating = $ratingNode ? trim($ratingNode->nodeValue) : '';
+    $extractedCover = $coverNode ? $coverNode->getAttribute('src') : '';
 
     $newTitle = $manga['title'];
     $newAltTitles = $manga['alt_titles'];
@@ -88,14 +90,14 @@ foreach ($mangas as $manga) {
     elseif (stripos($extractedRating, '18+') !== false || stripos($extractedRating, '21+') !== false) $finalRating = 'erotica';
     elseif (!empty($extractedRating) && $extractedRating !== '-') $finalRating = $extractedRating; // Just save whatever text they have if we can't map it
     
-    if ($didSwap || $finalAuthor !== 'Unknown' || $finalStatus !== 'ongoing' || $finalRating !== 'safe') {
+    if ($didSwap || $finalAuthor !== 'Unknown' || $finalStatus !== 'ongoing' || $finalRating !== 'safe' || !empty($extractedCover)) {
         if ($didSwap) {
             echo "  [+] Swapping Title! Main: {$newTitle}\n";
             $swapped++;
         } else {
-            echo "  [+] Updating extra metadata (Author/Status/Rating)\n";
+            echo "  [+] Updating extra metadata (Author/Status/Rating/Cover)\n";
         }
-        $updateStmt->execute([$newTitle, $newAltTitles, $finalAuthor, $finalStatus, $finalRating, $manga['manga_id']]);
+        $updateStmt->execute([$newTitle, $newAltTitles, $finalAuthor, $finalStatus, $finalRating, $extractedCover, $manga['manga_id']]);
     } else {
         echo "  [-] No alternative title or metadata to update.\n";
         $markSyncedStmt->execute([$manga['manga_id']]);
