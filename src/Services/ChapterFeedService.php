@@ -166,6 +166,16 @@ class ChapterFeedService {
                 $feed = $this->fetchMangaKatanaFeed($slug, $offset, $limit, $mangaId);
                 if ($feed['totalChapters'] > 0) return $feed;
             }
+            // 4. Try Komiku
+            elseif ($provider === 'komiku') {
+                $feed = $this->fetchKomikuFeed($slug, $offset, $limit, $mangaId);
+                if ($feed['totalChapters'] > 0) return $feed;
+            }
+            // 5. Try Komikcast
+            elseif ($provider === 'komikcast') {
+                $feed = $this->fetchKomikcastFeed($slug, $offset, $limit, $mangaId);
+                if ($feed['totalChapters'] > 0) return $feed;
+            }
         }
 
         // If all fallbacks fail
@@ -318,6 +328,136 @@ class ChapterFeedService {
                     ],
                     'relationships' => [['type' => 'scanlation_group', 'attributes' => ['name' => 'MangaKatana']]]
                 ];
+            }
+        }
+
+        usort($rawChapters, function($a, $b) {
+            $valA = floatval($a['attributes']['chapter'] !== 'Oneshot' ? $a['attributes']['chapter'] : 0);
+            $valB = floatval($b['attributes']['chapter'] !== 'Oneshot' ? $b['attributes']['chapter'] : 0);
+            return $valB <=> $valA;
+        });
+
+        $totalChapters = count($rawChapters);
+        $pagedChapters = array_slice($rawChapters, $offset, $limit);
+
+        $firstChapterUrl = '#';
+        if (!empty($rawChapters)) {
+            $fChap = end($rawChapters); 
+            $firstChapterUrl = "read.php?manga_id={$mangaId}&chapter_id={$fChap['id']}";
+        }
+
+        return [
+            'chapters' => $pagedChapters,
+            'totalChapters' => $totalChapters,
+            'firstChapterUrl' => $firstChapterUrl,
+            'startTarget' => '_self'
+        ];
+    }
+
+    private function fetchKomikuFeed($slug, $offset, $limit, $mangaId) {
+        $url = "https://komiku.org/manga/" . $slug . "/";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        $html = curl_exec($ch);
+        curl_close($ch);
+
+        $rawChapters = [];
+        
+        if ($html && preg_match_all('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/is', $html, $matches)) {
+            for ($i = 0; $i < count($matches[1]); $i++) {
+                $chapterUrl = $matches[1][$i];
+                $titleText = strip_tags($matches[2][$i]);
+                
+                // Ensure it's a komiku link and has a chapter number
+                if (strpos($chapterUrl, 'komiku.org') !== false && preg_match('/Chapter\s*([0-9.]+)/i', $titleText, $numMatch)) {
+                    $chapNum = $numMatch[1];
+                    $urlParts = array_filter(explode('/', rtrim($chapterUrl, '/')));
+                    $chapterSlug = end($urlParts);
+                    
+                    // Prevent duplicates
+                    $exists = false;
+                    foreach ($rawChapters as $rc) {
+                        if ($rc['id'] === $chapterSlug) { $exists = true; break; }
+                    }
+                    
+                    if (!$exists) {
+                        $rawChapters[] = [
+                            'id' => $chapterSlug,
+                            'attributes' => [
+                                'chapter' => $chapNum,
+                                'title' => "Chapter " . $chapNum,
+                                'updatedAt' => date('Y-m-d\TH:i:s\Z')
+                            ],
+                            'relationships' => [['type' => 'scanlation_group', 'attributes' => ['name' => 'Komiku']]]
+                        ];
+                    }
+                }
+            }
+        }
+
+        usort($rawChapters, function($a, $b) {
+            $valA = floatval($a['attributes']['chapter'] !== 'Oneshot' ? $a['attributes']['chapter'] : 0);
+            $valB = floatval($b['attributes']['chapter'] !== 'Oneshot' ? $b['attributes']['chapter'] : 0);
+            return $valB <=> $valA;
+        });
+
+        $totalChapters = count($rawChapters);
+        $pagedChapters = array_slice($rawChapters, $offset, $limit);
+
+        $firstChapterUrl = '#';
+        if (!empty($rawChapters)) {
+            $fChap = end($rawChapters); 
+            $firstChapterUrl = "read.php?manga_id={$mangaId}&chapter_id={$fChap['id']}";
+        }
+
+        return [
+            'chapters' => $pagedChapters,
+            'totalChapters' => $totalChapters,
+            'firstChapterUrl' => $firstChapterUrl,
+            'startTarget' => '_self'
+        ];
+    }
+
+    private function fetchKomikcastFeed($slug, $offset, $limit, $mangaId) {
+        $url = "https://komikcast.io/komik/" . $slug . "/";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        $html = curl_exec($ch);
+        curl_close($ch);
+
+        $rawChapters = [];
+        
+        if ($html && preg_match_all('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/is', $html, $matches)) {
+            for ($i = 0; $i < count($matches[1]); $i++) {
+                $chapterUrl = $matches[1][$i];
+                $titleText = strip_tags($matches[2][$i]);
+                
+                if (strpos($chapterUrl, 'komikcast.io/chapter/') !== false && preg_match('/Chapter\s*([0-9.]+)/i', $titleText, $numMatch)) {
+                    $chapNum = $numMatch[1];
+                    $urlParts = array_filter(explode('/', rtrim($chapterUrl, '/')));
+                    $chapterSlug = end($urlParts);
+                    
+                    $exists = false;
+                    foreach ($rawChapters as $rc) {
+                        if ($rc['id'] === $chapterSlug) { $exists = true; break; }
+                    }
+                    
+                    if (!$exists) {
+                        $rawChapters[] = [
+                            'id' => $chapterSlug,
+                            'attributes' => [
+                                'chapter' => $chapNum,
+                                'title' => "Chapter " . $chapNum,
+                                'updatedAt' => date('Y-m-d\TH:i:s\Z')
+                            ],
+                            'relationships' => [['type' => 'scanlation_group', 'attributes' => ['name' => 'Komikcast']]]
+                        ];
+                    }
+                }
             }
         }
 

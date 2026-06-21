@@ -178,6 +178,70 @@ class ReaderService {
                     if (!empty($pages)) return ['success' => true, 'pages' => $pages];
                 }
             }
+            
+            // 4. KOMIKU NATIVE FETCH
+            elseif ($provider === 'komiku') {
+                $readUrl = "https://komiku.org/" . urlencode($chapterId) . "/";
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $readUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                $html = curl_exec($ch);
+                curl_close($ch);
+                
+                if ($html && preg_match('/<div[^>]*id=["\']Baca_Komik["\'][^>]*>(.*?)<div[^>]*class=["\']clear["\']/is', $html, $bacaMatch)) {
+                    $imgArea = $bacaMatch[1];
+                    if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/is', $imgArea, $matches)) {
+                        $pages = [];
+                        foreach ($matches[1] as $imgUrl) {
+                            if (strpos($imgUrl, 'http') === 0) $pages[] = trim($imgUrl);
+                        }
+                        if (!empty($pages)) return ['success' => true, 'pages' => $pages];
+                    }
+                } else if ($html && preg_match_all('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/is', $html, $matches)) {
+                    // Fallback to grabbing all images if #Baca_Komik is not found
+                    $pages = [];
+                    foreach ($matches[1] as $imgUrl) {
+                        if (strpos($imgUrl, 'http') === 0 && preg_match('/\.(jpg|jpeg|png|webp)/i', $imgUrl) && strpos($imgUrl, 'logo') === false && strpos($imgUrl, 'avatar') === false) {
+                            $pages[] = trim($imgUrl);
+                        }
+                    }
+                    if (!empty($pages)) return ['success' => true, 'pages' => $pages];
+                }
+            }
+            
+            // 5. KOMIKCAST NATIVE FETCH
+            elseif ($provider === 'komikcast') {
+                $readUrl = "https://komikcast.io/chapter/" . urlencode($chapterId) . "/";
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $readUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                $html = curl_exec($ch);
+                curl_close($ch);
+                
+                if ($html && preg_match('/<div[^>]+class=["\'][^"\']*main-reading-area[^"\']*["\'][^>]*>(.*?)<\/div>\s*<\/div>/is', $html, $areaMatch)) {
+                    $imgArea = $areaMatch[1];
+                    if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/is', $imgArea, $matches)) {
+                        $pages = [];
+                        foreach ($matches[1] as $imgUrl) {
+                            if (strpos($imgUrl, 'http') === 0) $pages[] = trim($imgUrl);
+                        }
+                        if (!empty($pages)) return ['success' => true, 'pages' => $pages];
+                    }
+                } else if ($html && preg_match_all('/<img[^>]+class=["\']aligncenter[^"\']*["\'][^>]+src=["\']([^"\']+)["\']/is', $html, $matches)) {
+                    // Fallback to aligncenter images
+                    $pages = [];
+                    foreach ($matches[1] as $imgUrl) {
+                        if (strpos($imgUrl, 'http') === 0) $pages[] = trim($imgUrl);
+                    }
+                    if (!empty($pages)) return ['success' => true, 'pages' => $pages];
+                }
+            }
         }
         
         return ['success' => false, 'pages' => []];
