@@ -370,8 +370,8 @@ class ChapterFeedService {
                 $chapterUrl = $matches[1][$i];
                 $titleText = strip_tags($matches[2][$i]);
                 
-                // Ensure it's a komiku link and has a chapter number
-                if (strpos($chapterUrl, 'komiku.org') !== false && preg_match('/Chapter\s*([0-9.]+)/i', $titleText, $numMatch)) {
+                // Ensure it's a chapter link and has a chapter number
+                if (stripos($chapterUrl, 'chapter') !== false && preg_match('/Chapter\s*([0-9.]+)/i', $titleText, $numMatch)) {
                     $chapNum = $numMatch[1];
                     $urlParts = array_filter(explode('/', rtrim($chapterUrl, '/')));
                     $chapterSlug = end($urlParts);
@@ -435,8 +435,7 @@ class ChapterFeedService {
             for ($i = 0; $i < count($matches[1]); $i++) {
                 $chapterUrl = $matches[1][$i];
                 $titleText = strip_tags($matches[2][$i]);
-                
-                if (strpos($chapterUrl, 'komikcast.io/chapter/') !== false && preg_match('/Chapter\s*([0-9.]+)/i', $titleText, $numMatch)) {
+                if (stripos($chapterUrl, 'chapter') !== false && preg_match('/Chapter\s*([0-9.]+)/i', $titleText, $numMatch)) {
                     $chapNum = $numMatch[1];
                     $urlParts = array_filter(explode('/', rtrim($chapterUrl, '/')));
                     $chapterSlug = end($urlParts);
