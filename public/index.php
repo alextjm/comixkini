@@ -51,13 +51,13 @@ $ratingPlaceholders = "'" . implode("','", $allowedRatings) . "'";
 $baseQuery = "FROM cp_titles WHERE is_active = 1 AND content_rating IN ($ratingPlaceholders) AND en_chapter_count >= 3";
 $timeFilter1Month = " AND last_updated >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
 
-$stmtRecentPopular = $pdo->query("SELECT * $baseQuery $timeFilter1Month ORDER BY followers DESC, last_updated DESC LIMIT 15");
+$stmtRecentPopular = $pdo->query("SELECT * $baseQuery $timeFilter1Month ORDER BY followers DESC LIMIT 15");
 $recentPopular = $stmtRecentPopular->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtMostFollows = $pdo->query("SELECT * $baseQuery $timeFilter1Month ORDER BY publish_year DESC, followers DESC LIMIT 15");
+$stmtMostFollows = $pdo->query("SELECT * $baseQuery AND en_chapter_count BETWEEN 3 AND 30 ORDER BY followers DESC LIMIT 15");
 $mostFollows = $stmtMostFollows->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtLatest = $pdo->query("SELECT * $baseQuery ORDER BY followers DESC, last_updated DESC LIMIT 15");
+$stmtLatest = $pdo->query("SELECT * $baseQuery ORDER BY last_updated DESC LIMIT 15");
 $latestUpdates = $stmtLatest->fetchAll(PDO::FETCH_ASSOC);
 
 $stmtSidebar = $pdo->query("SELECT * $baseQuery AND followers > 1000 ORDER BY RAND() LIMIT 8");
