@@ -54,10 +54,19 @@ $timeFilter1Month = " AND last_updated >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
 $stmtRecentPopular = $pdo->query("SELECT * $baseQuery $timeFilter1Month ORDER BY followers DESC LIMIT 15");
 $recentPopular = $stmtRecentPopular->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtMostFollows = $pdo->query("SELECT * $baseQuery AND en_chapter_count BETWEEN 3 AND 30 ORDER BY followers DESC LIMIT 15");
+// Prevent overlap
+$popularIds = array_column($recentPopular, 'manga_id');
+$excludeIds = empty($popularIds) ? "'none'" : "'" . implode("','", $popularIds) . "'";
+
+$stmtMostFollows = $pdo->query("SELECT * $baseQuery AND en_chapter_count BETWEEN 3 AND 40 AND manga_id NOT IN ($excludeIds) ORDER BY followers DESC LIMIT 15");
 $mostFollows = $stmtMostFollows->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtLatest = $pdo->query("SELECT * $baseQuery ORDER BY last_updated DESC LIMIT 15");
+// Prevent overlap
+$mostFollowsIds = array_column($mostFollows, 'manga_id');
+$allExcludeIds = empty(array_merge($popularIds, $mostFollowsIds)) ? "'none'" : "'" . implode("','", array_merge($popularIds, $mostFollowsIds)) . "'";
+
+// Use followers ASC as secondary sort so it picks different items than the top popular since last_updated is identical for all right now
+$stmtLatest = $pdo->query("SELECT * $baseQuery AND manga_id NOT IN ($allExcludeIds) ORDER BY last_updated DESC, followers ASC LIMIT 15");
 $latestUpdates = $stmtLatest->fetchAll(PDO::FETCH_ASSOC);
 
 $stmtSidebar = $pdo->query("SELECT * $baseQuery AND followers > 1000 ORDER BY RAND() LIMIT 8");
