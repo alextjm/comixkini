@@ -100,6 +100,18 @@ if (!$isLocked) {
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ComixKini">
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ch. <?= htmlspecialchars($chapterNum) ?> - <?= htmlspecialchars($mangaTitle) ?></title>
