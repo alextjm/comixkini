@@ -13,23 +13,24 @@ try {
     $pdo->exec("ALTER TABLE cp_titles ADD COLUMN is_deep_synced TINYINT(1) DEFAULT 0");
 }
 
-// 2. Fetch comics that haven't been deep synced
-$stmt = $pdo->prepare("SELECT manga_id, title, consumet_id, alt_titles FROM cp_titles WHERE is_deep_synced = 0 AND consumet_id LIKE 'komiku|%' LIMIT 500");
-$stmt->execute();
-$mangas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-if (empty($mangas)) {
-    echo "All Komiku titles have been deep synced!\n";
-    exit;
-}
-
 $updateStmt = $pdo->prepare("UPDATE cp_titles SET title = ?, alt_titles = ?, author = ?, status = ?, content_rating = ?, cover_url = ?, is_deep_synced = 1 WHERE manga_id = ?");
 $markSyncedStmt = $pdo->prepare("UPDATE cp_titles SET is_deep_synced = 1 WHERE manga_id = ?");
 
 $processed = 0;
 $swapped = 0;
 
-foreach ($mangas as $manga) {
+while (true) {
+    // 2. Fetch comics that haven't been deep synced
+    $stmt = $pdo->prepare("SELECT manga_id, title, consumet_id, alt_titles FROM cp_titles WHERE is_deep_synced = 0 AND consumet_id LIKE 'komiku|%' LIMIT 500");
+    $stmt->execute();
+    $mangas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (empty($mangas)) {
+        echo "\nAll Komiku titles have been deep synced!\n";
+        break;
+    }
+
+    foreach ($mangas as $manga) {
     $slug = str_replace('komiku|', '', $manga['consumet_id']);
     $url = "https://komiku.org/manga/{$slug}/";
     
@@ -115,7 +116,7 @@ foreach ($mangas as $manga) {
     // Polite delay to avoid DDOS-Guard ban
     usleep(1500000); // 1.5 seconds
 }
+}
 
 echo "\nDeep Sync Complete! Processed: $processed | Titles Swapped: $swapped\n";
-echo "Run this script again later to process the next batch.\n";
 ?>
