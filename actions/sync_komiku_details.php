@@ -82,7 +82,15 @@ foreach ($mangas as $manga) {
 
     // Default values if empty
     $finalAuthor = !empty($extractedAuthor) && $extractedAuthor !== '-' ? $extractedAuthor : 'Unknown';
-    $finalStatus = !empty($extractedStatus) && $extractedStatus !== '-' ? $extractedStatus : 'ongoing';
+    // Map status cleanly
+    $finalStatus = 'ongoing';
+    if (stripos($extractedStatus, 'tamat') !== false || stripos($extractedStatus, 'end') !== false || stripos($extractedStatus, 'completed') !== false) {
+        $finalStatus = 'completed';
+    } elseif (stripos($extractedStatus, 'hiatus') !== false) {
+        $finalStatus = 'hiatus';
+    } elseif (stripos($extractedStatus, 'cancel') !== false) {
+        $finalStatus = 'cancelled';
+    }
     
     // Map rating roughly
     $finalRating = 'safe';
