@@ -141,7 +141,7 @@ if ('serviceWorker' in navigator) {
                 </div>
             </div>
 
-            <div class="flex-grow max-w-xs hidden sm:block">
+            <div class="flex-grow min-w-[80px] max-w-xs">
                 <?php if (!empty($chapters)): ?>
                     <select class="bg-[#1a1f29] border border-gray-700 text-sm rounded px-3 py-1.5 w-full text-gray-200 focus:outline-none focus:border-[#26c6da]" onchange="window.location.href=this.value">
                         <?php foreach ($chapters as $chap): ?>
