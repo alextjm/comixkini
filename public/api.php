@@ -155,7 +155,8 @@ try {
             foreach ($mangas as $manga) {
                 $title = htmlspecialchars($manga['title']);
                 $url = "manga.php?id=" . urlencode($manga['manga_id']);
-                $cover = htmlspecialchars($manga['cover_url'] ?? 'https://via.placeholder.com/300x420');
+                $rawCover = $manga['cover_url'] ?? 'https://via.placeholder.com/300x420';
+                $cover = "image_proxy.php?v=2&w=300&url=" . urlencode($rawCover);
                 $updated = timeAgo($manga['last_updated']);
                 
                 $groupHover = 'group-hover:text-accent';

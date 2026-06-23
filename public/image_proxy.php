@@ -8,9 +8,15 @@ if ($url && strpos($url, '//') === 0) {
     $url = 'https:' . $url;
 }
 
+function servePlaceholder() {
+    header("Content-Type: image/svg+xml");
+    header("Cache-Control: public, max-age=86400"); // Cache failures for 1 day
+    echo '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420" viewBox="0 0 300 420"><rect width="300" height="420" fill="#1a1f29"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#4b5563">No Cover</text></svg>';
+    exit;
+}
+
 if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
-    http_response_code(400);
-    die("Invalid Image URL");
+    servePlaceholder();
 }
 
 $parsedUrl = parse_url($url);
@@ -129,6 +135,6 @@ if ($data && strlen($data) > 100) {
     header("X-Cache: MISS");
     echo $data;
 } else {
-    http_response_code(404);
+    servePlaceholder();
 }
 ?>
