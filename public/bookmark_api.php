@@ -2,11 +2,11 @@
 // 1. Define a private folder for ComixKini sessions
 $sessionPath = __DIR__ . '/../cache/sessions';
 if (!is_dir($sessionPath)) {
-    mkdir($sessionPath, 0755, true);
+    @mkdir($sessionPath, 0777, true);
 }
 
 // 2. Tell PHP to use this private folder
-session_save_path($sessionPath);
+if (is_writable($sessionPath)) { session_save_path($sessionPath); }
 
 // 3. Set the 30-day lifetime
 ini_set('session.gc_maxlifetime', 2592000);
