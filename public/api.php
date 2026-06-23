@@ -94,11 +94,28 @@ try {
             $ratingPlaceholders = "'" . implode("','", $allowedRatings) . "'";
             $baseQuery = "FROM cp_titles WHERE is_active = 1 AND content_rating IN ($ratingPlaceholders) AND en_chapter_count >= 3";
 
+            $timeFilter1Month = " AND last_updated >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+            
             if ($section === 'popular') {
-                $stmt = $pdo->query("SELECT * $baseQuery $timeFilter ORDER BY followers DESC, last_updated DESC LIMIT 15");
+                $stmt = $pdo->query("SELECT * $baseQuery $timeFilter ORDER BY followers DESC LIMIT 15");
             } else if ($section === 'follows') {
-                $stmt = $pdo->query("SELECT * $baseQuery $timeFilter ORDER BY publish_year DESC, followers DESC LIMIT 15");
+                // Calculate popular exclusions based on default 1m time
+                $stmtPop = $pdo->query("SELECT manga_id $baseQuery $timeFilter1Month ORDER BY followers DESC LIMIT 15");
+                $popIds = $stmtPop->fetchAll(PDO::FETCH_COLUMN);
+                $excludeIds = empty($popIds) ? "'none'" : "'" . implode("','", $popIds) . "'";
+                
+                $stmt = $pdo->query("SELECT * $baseQuery $timeFilter AND en_chapter_count BETWEEN 3 AND 40 AND manga_id NOT IN ($excludeIds) ORDER BY followers DESC LIMIT 15");
             } else if ($section === 'latest') {
+                $stmtPop = $pdo->query("SELECT manga_id $baseQuery $timeFilter1Month ORDER BY followers DESC LIMIT 15");
+                $popIds = $stmtPop->fetchAll(PDO::FETCH_COLUMN);
+                $excludeIds1 = empty($popIds) ? "'none'" : "'" . implode("','", $popIds) . "'";
+                
+                $stmtFoll = $pdo->query("SELECT manga_id $baseQuery AND en_chapter_count BETWEEN 3 AND 40 AND manga_id NOT IN ($excludeIds1) ORDER BY followers DESC LIMIT 15");
+                $follIds = $stmtFoll->fetchAll(PDO::FETCH_COLUMN);
+                
+                $allIds = array_merge($popIds, $follIds);
+                $allExcludeIds = empty($allIds) ? "'none'" : "'" . implode("','", $allIds) . "'";
+
                 $tab = $_GET['tab'] ?? $request['tab'] ?? 'hot';
                 $type = $_GET['type'] ?? $request['type'] ?? 'all';
                 $typeFilter = "";
@@ -108,9 +125,9 @@ try {
                 elseif ($type === 'other') $typeFilter = " AND original_language NOT IN ('ja', 'ko', 'zh')";
 
                 if ($tab === 'hot') {
-                    $stmt = $pdo->query("SELECT * $baseQuery $typeFilter ORDER BY followers DESC, last_updated DESC LIMIT 15");
+                    $stmt = $pdo->query("SELECT * $baseQuery $typeFilter AND manga_id NOT IN ($allExcludeIds) ORDER BY followers DESC, last_updated DESC LIMIT 15");
                 } else {
-                    $stmt = $pdo->query("SELECT * $baseQuery $typeFilter ORDER BY last_updated DESC LIMIT 15");
+                    $stmt = $pdo->query("SELECT * $baseQuery $typeFilter AND manga_id NOT IN ($allExcludeIds) ORDER BY last_updated DESC, followers ASC LIMIT 15");
                 }
             } else if (trim($section) === 'erotica' || trim($section) === 'explicit') {
                 $rating = ($section === 'erotica') ? 'erotica' : 'pornographic';
