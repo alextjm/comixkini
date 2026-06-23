@@ -56,6 +56,9 @@ try {
             }
 
             $allowedRatings = isset($_SESSION['content_filters']) ? explode(',', $_SESSION['content_filters']) : ['safe', 'suggestive'];
+            if (in_array('safe', $allowedRatings)) array_push($allowedRatings, '10+', '13+', '15+', '16+', 'Semua Umur', 'Remaja');
+            if (in_array('suggestive', $allowedRatings)) array_push($allowedRatings, '17+', 'Dewasa');
+            if (in_array('erotica', $allowedRatings) || in_array('pornographic', $allowedRatings)) array_push($allowedRatings, '18+', '21+');
             $ratingPlaceholders = "'" . implode("','", $allowedRatings) . "'";
 
             $stmt = $pdo->prepare("SELECT manga_id, title, cover_url FROM cp_titles WHERE title LIKE ? AND is_active = 1 AND content_rating IN ($ratingPlaceholders) ORDER BY followers DESC LIMIT 8");
@@ -85,6 +88,9 @@ try {
             }
 
             $allowedRatings = isset($_SESSION['content_filters']) ? explode(',', $_SESSION['content_filters']) : ['safe', 'suggestive'];
+            if (in_array('safe', $allowedRatings)) array_push($allowedRatings, '10+', '13+', '15+', '16+', 'Semua Umur', 'Remaja');
+            if (in_array('suggestive', $allowedRatings)) array_push($allowedRatings, '17+', 'Dewasa');
+            if (in_array('erotica', $allowedRatings) || in_array('pornographic', $allowedRatings)) array_push($allowedRatings, '18+', '21+');
             $ratingPlaceholders = "'" . implode("','", $allowedRatings) . "'";
             $baseQuery = "FROM cp_titles WHERE is_active = 1 AND content_rating IN ($ratingPlaceholders) AND en_chapter_count >= 3";
 
