@@ -1,4 +1,4 @@
-const CACHE_NAME = 'comixpass-cache-v2';
+const CACHE_NAME = 'comixkini-cache-v3';
 const urlsToCache = [
   '/manifest.json'
 ];
@@ -30,21 +30,31 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Network First strategy
+  // Use Network First for navigation (HTML) and PHP requests
+  if (event.request.mode === 'navigate' || event.request.url.includes('.php') || event.request.url.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+           // Clone the response and save it to the cache so the offline version is always the latest state!
+           const responseToCache = response.clone();
+           caches.open(CACHE_NAME).then(cache => {
+             cache.put(event.request, responseToCache);
+           });
+           return response;
+        })
+        .catch(() => {
+           // Fallback to cache if offline
+           return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Use Cache First for everything else (images, CSS, JS)
   event.respondWith(
-    fetch(event.request)
+    caches.match(event.request)
       .then(response => {
-        // Optionally cache the new response if it's successful
-        if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
+        return response || fetch(event.request);
       })
   );
 });
