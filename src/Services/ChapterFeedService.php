@@ -42,10 +42,14 @@ class ChapterFeedService {
 
         if ($isExternal) {
             // Use the new Waterfall Feed method
-            return $this->getExternalFeed($manga, $offset, $limit); 
-        } else {
-            return $this->getMangaDexFeed($manga['manga_id'], $offset, $limit, $contentRatingQuery);
+            $feed = $this->getExternalFeed($manga, $offset, $limit); 
+            if ($feed['totalChapters'] > 0) {
+                return $feed;
+            }
+            // If external feed failed or format was invalid (e.g. "1"), fall back to MangaDex
         }
+        
+        return $this->getMangaDexFeed($manga['manga_id'], $offset, $limit, $contentRatingQuery);
     }
 
     private function getMangaDexFeed($mangaId, $offset, $limit, $contentRatingQuery) {

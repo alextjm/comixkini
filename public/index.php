@@ -13,6 +13,11 @@ ini_set('session.gc_maxlifetime', 2592000);
 session_set_cookie_params(2592000);
 session_start();
 
+// 4. FORCE CLOUDFLARE/BROWSER TO NEVER CACHE THIS HTML
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 $pdo = require_once __DIR__ . '/../config/database.php';
 
 function timeAgo($datetime) {
@@ -776,13 +781,13 @@ if ('serviceWorker' in navigator) {
 
             fetch('auth_api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(res => res.json()).then(data => {
-                if (data.success) { window.location.reload(); } 
+                if (data.success) { window.location.href = window.location.pathname + '?v=' + new Date().getTime(); } 
                 else { authError.innerText = data.message; authError.classList.remove('hidden'); }
             }).catch(err => {
                 authError.innerText = "Connection error. Try again."; authError.classList.remove('hidden');
             });
         }
-        function logoutUser() { fetch('api.php?action=logout').then(() => window.location.reload()); }
+        function logoutUser() { fetch('auth_api.php', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'logout'}) }).then(() => window.location.href = window.location.pathname + '?v=' + new Date().getTime()); }
 
         // --- Global Clickaway Logic (FIXED for mobile tray) ---
         document.addEventListener('click', (e) => {

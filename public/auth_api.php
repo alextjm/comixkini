@@ -82,6 +82,7 @@ if ($action === 'register') {
         $_SESSION['content_filters'] = 'safe,suggestive';
         $_SESSION['session_token'] = $newToken;
         
+        session_write_close();
         echo json_encode(['success' => true]);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { 
@@ -114,6 +115,7 @@ if ($action === 'login') {
         $_SESSION['content_filters'] = $user['content_filters'] ?? 'safe,suggestive';
         $_SESSION['session_token'] = $newToken;
         
+        session_write_close();
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Invalid credentials.']);
@@ -123,6 +125,7 @@ if ($action === 'login') {
 
 if ($action === 'logout') {
     session_destroy();
+    session_write_close();
     echo json_encode(['success' => true]);
     exit;
 }
