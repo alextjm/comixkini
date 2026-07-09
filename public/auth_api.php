@@ -64,15 +64,21 @@ if ($action === 'register') {
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO cp_users (username, email, password_hash) VALUES (?, ?, ?)");
-        $stmt->execute([$username, $email, $hash]);
+        if (isset($_SESSION['user_id']) && isset($_SESSION['username']) && strpos($_SESSION['username'], 'guest_') === 0) {
+            $stmt = $pdo->prepare("UPDATE cp_users SET username = ?, email = ?, password_hash = ? WHERE id = ?");
+            $stmt->execute([$username, $email, $hash, $_SESSION['user_id']]);
+            $userId = $_SESSION['user_id'];
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO cp_users (username, email, password_hash) VALUES (?, ?, ?)");
+            $stmt->execute([$username, $email, $hash]);
+            $userId = $pdo->lastInsertId();
+        }
         
         $rateData['count']++;
         file_put_contents($rateLimitFile, json_encode($rateData));
         
         // Generate Concurrency Token
         $newToken = bin2hex(random_bytes(32));
-        $userId = $pdo->lastInsertId();
         $updateToken = $pdo->prepare("UPDATE cp_users SET session_token = ? WHERE id = ?");
         $updateToken->execute([$newToken, $userId]);
 

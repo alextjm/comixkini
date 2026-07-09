@@ -43,11 +43,17 @@ class AuthService {
         }
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $ins = $this->pdo->prepare("INSERT INTO cp_users (username, email, password_hash) VALUES (?, ?, ?)");
         
-        if ($ins->execute([$username, $email, $hashedPassword])) {
-            // Auto-login after registration
-            return $this->login($username, $password);
+        if (isset($_SESSION['user_id']) && isset($_SESSION['username']) && strpos($_SESSION['username'], 'guest_') === 0) {
+            $ins = $this->pdo->prepare("UPDATE cp_users SET username = ?, email = ?, password_hash = ? WHERE id = ?");
+            if ($ins->execute([$username, $email, $hashedPassword, $_SESSION['user_id']])) {
+                return $this->login($username, $password);
+            }
+        } else {
+            $ins = $this->pdo->prepare("INSERT INTO cp_users (username, email, password_hash) VALUES (?, ?, ?)");
+            if ($ins->execute([$username, $email, $hashedPassword])) {
+                return $this->login($username, $password);
+            }
         }
         
         return ['success' => false, 'message' => 'Registration failed.'];

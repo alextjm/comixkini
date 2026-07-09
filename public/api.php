@@ -236,13 +236,7 @@ try {
         // ==========================================
         case 'redeem_voucher':
             header('Content-Type: application/json');
-            if (!isset($_SESSION['user_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Please log in first.']);
-                exit;
-            }
-
             $code = strtoupper(trim($request['code'] ?? ''));
-            $userId = $_SESSION['user_id'];
 
             if (empty($code)) {
                 echo json_encode(['success' => false, 'message' => 'Please enter a voucher code.']);
@@ -251,16 +245,61 @@ try {
 
             $pdo->beginTransaction();
 
-            $stmt = $pdo->prepare("SELECT * FROM cp_vouchers WHERE voucher_code = ? AND is_used = 0 FOR UPDATE");
+            $stmt = $pdo->prepare("SELECT * FROM cp_vouchers WHERE voucher_code = ? FOR UPDATE");
             $stmt->execute([$code]);
             $voucher = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$voucher) {
                 $pdo->rollBack();
-                echo json_encode(['success' => false, 'message' => 'Invalid or already used code.']);
+                echo json_encode(['success' => false, 'message' => 'Invalid code.']);
                 exit;
             }
 
+            if ($voucher['is_used'] == 1) {
+                $usedUserId = $voucher['used_by_user_id'];
+                $usrStmt = $pdo->prepare("SELECT * FROM cp_users WHERE id = ?");
+                $usrStmt->execute([$usedUserId]);
+                $usedUser = $usrStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($usedUser && strpos($usedUser['username'], 'guest_') === 0) {
+                    $_SESSION['user_id'] = $usedUser['id'];
+                    $_SESSION['username'] = $usedUser['username'];
+                    $_SESSION['role'] = $usedUser['role'] ?? 'user';
+                    $_SESSION['content_filters'] = $usedUser['content_filters'] ?? 'safe,suggestive';
+                    
+                    $newToken = bin2hex(random_bytes(32));
+                    $pdo->prepare("UPDATE cp_users SET session_token = ? WHERE id = ?")->execute([$newToken, $usedUser['id']]);
+                    $_SESSION['session_token'] = $newToken;
+                    session_write_close();
+                    $pdo->commit();
+                    
+                    echo json_encode(['success' => true, 'manga_id' => $voucher['manga_id'] ?? null, 'is_vip' => empty($voucher['manga_id']), 'new_expiry' => 'Session restored. You are logged in as a guest!']);
+                    exit;
+                } else {
+                    $pdo->rollBack();
+                    echo json_encode(['success' => false, 'message' => 'Code already redeemed. Please log in with your email/password.']);
+                    exit;
+                }
+            }
+
+            if (!isset($_SESSION['user_id'])) {
+                $guestUsername = 'guest_' . bin2hex(random_bytes(4));
+                $guestEmail = $guestUsername . '@comixkini.local';
+                $guestPassword = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
+                $newToken = bin2hex(random_bytes(32));
+                
+                $stmtNew = $pdo->prepare("INSERT INTO cp_users (username, email, password_hash, session_token) VALUES (?, ?, ?, ?)");
+                $stmtNew->execute([$guestUsername, $guestEmail, $guestPassword, $newToken]);
+                $newUserId = $pdo->lastInsertId();
+                
+                $_SESSION['user_id'] = $newUserId;
+                $_SESSION['username'] = $guestUsername;
+                $_SESSION['role'] = 'user';
+                $_SESSION['content_filters'] = 'safe,suggestive';
+                $_SESSION['session_token'] = $newToken;
+            }
+
+            $userId = $_SESSION['user_id'];
             $daysToAdd = (int)$voucher['duration_days'];
             $mangaId = $voucher['manga_id'] ?? null;
 
@@ -272,7 +311,6 @@ try {
                 $now->modify("+$daysToAdd days");
                 $expiresAt = $now->format('Y-m-d H:i:s');
 
-                // Insert or update the title access expiration
                 $stmtTitle = $pdo->prepare("
                     INSERT INTO cp_user_titles (user_id, manga_id, expires_at) 
                     VALUES (?, ?, ?) 
@@ -284,7 +322,7 @@ try {
                 $updVoucher->execute([$userId, $voucher['id']]);
 
                 $pdo->commit();
-                echo json_encode(['success' => true, 'new_expiry' => 'Title Unlocked until ' . $now->format('F j, Y')]);
+                echo json_encode(['success' => true, 'manga_id' => $mangaId, 'new_expiry' => 'Title Unlocked until ' . $now->format('F j, Y')]);
                 exit;
                 
             } else {
@@ -315,7 +353,7 @@ try {
                 $updVoucher->execute([$userId, $voucher['id']]);
 
                 $pdo->commit();
-                echo json_encode(['success' => true, 'new_expiry' => $newExpiryObj->format('F j, Y')]);
+                echo json_encode(['success' => true, 'is_vip' => true, 'new_expiry' => $newExpiryObj->format('F j, Y')]);
                 exit;
             }
             break;

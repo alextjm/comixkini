@@ -15,31 +15,33 @@ session_start();
 
 $pdo = require_once __DIR__ . '/../config/database.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit;
+$userId = $_SESSION['user_id'] ?? null;
+$user = null;
+if ($userId) {
+    // Fetch user data to check subscription
+    $stmt = $pdo->prepare("SELECT username, email, subscription_ends_at FROM cp_users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 }
-
-// Fetch user data to check subscription
-$stmt = $pdo->prepare("SELECT username, email, subscription_ends_at FROM cp_users WHERE id = ?");
-$stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $isActive = false;
 // Fetch user's individual purchased titles
-$stmtTitles = $pdo->prepare("
-    SELECT t.manga_id, t.title, t.cover_url, ut.expires_at 
-    FROM cp_user_titles ut
-    JOIN cp_titles t ON ut.manga_id = t.manga_id
-    WHERE ut.user_id = ? AND ut.expires_at > NOW()
-    ORDER BY ut.expires_at ASC
-");
-$stmtTitles->execute([$_SESSION['user_id']]);
-$ownedTitles = $stmtTitles->fetchAll(PDO::FETCH_ASSOC);
+$ownedTitles = [];
+if ($userId) {
+    $stmtTitles = $pdo->prepare("
+        SELECT t.manga_id, t.title, t.cover_url, ut.expires_at 
+        FROM cp_user_titles ut
+        JOIN cp_titles t ON ut.manga_id = t.manga_id
+        WHERE ut.user_id = ? AND ut.expires_at > NOW()
+        ORDER BY ut.expires_at ASC
+    ");
+    $stmtTitles->execute([$userId]);
+    $ownedTitles = $stmtTitles->fetchAll(PDO::FETCH_ASSOC);
+}
 $daysRemaining = 0;
 $expiryText = "Free Tier";
 
-if ($user['subscription_ends_at']) {
+if ($user && $user['subscription_ends_at']) {
     $expiryDate = new DateTime($user['subscription_ends_at']);
     $now = new DateTime();
     
@@ -169,16 +171,52 @@ if ('serviceWorker' in navigator) {
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
                     <p class="text-sm dark:text-gray-400 text-gray-500 font-bold mb-1">Account</p>
-                    <p class="text-xl dark:text-white text-black font-bold"><?= htmlspecialchars($user['username']) ?></p>
-                    <p class="text-xs dark:text-gray-500 text-gray-500"><?= htmlspecialchars($user['email']) ?></p>
+                    <p class="text-xl dark:text-white text-black font-bold"><?= $user ? htmlspecialchars($user['username']) : 'Guest' ?></p>
+                    <?php if ($user): ?><p class="text-xs dark:text-gray-500 text-gray-500"><?= htmlspecialchars($user['email']) ?></p><?php endif; ?>
                 </div>
                 <div class="md:text-right text-center">
                     <p class="text-sm dark:text-gray-400 text-gray-500 font-bold mb-1">Valid Until</p>
                     <p class="<?= $isActive ? 'text-accent' : 'dark:text-white text-black' ?> text-2xl font-black"><?= $expiryText ?></p>
-                    <?php if ($isActive): ?>
-                        <p class="text-xs dark:text-gray-400 text-gray-600 mt-1"><?= $daysRemaining ?> days remaining</p>
-                    <?php endif; ?>
+            <?php if ($userId): ?>
+            <div class="bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg p-4 sm:p-6 mb-6">
+                <h2 class="text-sm sm:text-base font-bold text-gray-800 dark:text-gray-100 mb-2 sm:mb-4 border-b border-gray-300 dark:border-gray-700 pb-2">Account Status</h2>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Account ID: <span class="font-mono text-gray-800 dark:text-gray-200"><?= htmlspecialchars($user['username']) ?></span></p>
+                        <?php if(strpos($user['username'], 'guest_') !== 0): ?>
+                        <p class="text-[10px] sm:text-xs text-gray-400 mt-1"><?= htmlspecialchars($user['email']) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="text-left sm:text-right">
+                        <?php if ($isActive): ?>
+                            <div class="inline-flex items-center gap-1.5 bg-green-500/10 text-green-600 dark:text-green-400 px-2 sm:px-3 py-1 rounded-full text-xs font-bold border border-green-500/20 mb-1">
+                                <span class="relative flex h-2 w-2">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                                VIP ACTIVE
+                            </div>
+                        <?php else: ?>
+                            <div class="inline-flex items-center gap-1.5 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 sm:px-3 py-1 rounded-full text-xs font-bold border border-gray-300 dark:border-gray-700 mb-1">
+                                FREE TIER
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if ($isActive): ?>
+                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">Expires: <span class="text-black dark:text-white"><?= $expiryText ?></span></p>
+                            <p class="text-[10px] text-gray-500 mt-0.5"><?= $daysRemaining ?> days remaining</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
+            </div>
+            <?php else: ?>
+            <div class="bg-blue-600 text-white rounded-lg p-6 mb-6 text-center shadow-lg">
+                <h2 class="text-lg font-bold mb-2">You are currently logged out</h2>
+                <p class="text-sm text-blue-100 mb-4">Enter a code below to start reading instantly as a guest, or login to view your purchases.</p>
+            </div>
+            <?php endif; ?></div>
             </div>
         </div>
 
@@ -239,14 +277,21 @@ if ('serviceWorker' in navigator) {
 
             fetch('api.php?action=redeem_voucher', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: code })
             }).then(res => res.json()).then(data => {
                 if (data.success) {
                     msgBox.className = 'mb-4 p-3 rounded text-sm font-bold text-center bg-green-900/50 border border-green-500 text-green-500';
-                    msgBox.innerText = `Success! Your ComixKini is now valid until ${data.new_expiry}. Reloading...`;
-                    codeInput.value = '';
-                    setTimeout(() => window.location.reload(), 2000);
+                    if (data.manga_id) {
+                        msgBox.innerText = `Success! ${data.new_expiry}. Redirecting to comic...`;
+                        codeInput.value = '';
+                        setTimeout(() => window.location.href = 'manga.php?id=' + data.manga_id, 1500);
+                    } else {
+                        msgBox.innerText = `Success! Your ComixKini is now valid until ${data.new_expiry}. Reloading...`;
+                        codeInput.value = '';
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
                 } else {
                     msgBox.className = 'mb-4 p-3 rounded text-sm font-bold text-center bg-red-900/50 border border-red-500 text-red-500';
                     msgBox.innerText = data.message;
@@ -315,7 +360,7 @@ if ('serviceWorker' in navigator) {
         setupSearch('searchInput', 'searchResults', 'searchResultsList');
         setupSearch('mobileSearchInput', 'mobileSearchResults', 'mobileSearchResultsList');
 
-        function logoutUser() { fetch('auth_api.php?action=logout').then(() => window.location.reload()); }
+        function logoutUser() { fetch('auth_api.php?action=logout', { credentials: 'same-origin' }).then(() => window.location.reload()); }
 
         // --- 5. Global Clickaway (FIXED for mobile tray) ---
         document.addEventListener('click', (e) => {

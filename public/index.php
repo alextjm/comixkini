@@ -177,6 +177,9 @@ if ('serviceWorker' in navigator) {
                         <div class="absolute right-0 mt-2 w-48 dark:bg-[#1a1f29] bg-white border dark:border-gray-700 border-gray-200 rounded shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                             <a href="profile.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent">My Library</a>
                             <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent border-b dark:border-gray-700 border-gray-200">ComixKini Status</a>
+                            <?php if (strpos($_SESSION['username'], 'guest_') === 0): ?>
+                                <button onclick="openAuthModal('register')" class="w-full text-left px-4 py-3 sm:py-2 text-sm text-blue-500 hover:bg-blue-500/10 font-bold border-b dark:border-gray-700 border-gray-200">Claim Account</button>
+                            <?php endif; ?>
                             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                                 <a href="admin.php" class="block px-4 py-3 sm:py-2 text-sm text-accent font-bold dark:hover:bg-[#262c38] hover:bg-gray-100 border-b dark:border-gray-700 border-gray-200 flex justify-between items-center">
                                     Admin Panel <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -191,6 +194,13 @@ if ('serviceWorker' in navigator) {
             </div>
         </div>
     </nav>
+
+    <?php if (isset($_SESSION['user_id']) && strpos($_SESSION['username'], 'guest_') === 0): ?>
+    <div class="bg-blue-600 text-white text-sm font-bold py-3 px-4 text-center shadow-lg relative z-40">
+        You are browsing as a Guest. 
+        <button onclick="openAuthModal('register')" class="underline hover:text-blue-200 ml-2 transition-colors">Claim your account</button> to save your progress permanently!
+    </div>
+    <?php endif; ?>
 
     <div id="mobileSearchTray" class="hidden md:hidden bg-white dark:bg-surface border-b border-gray-200 dark:border-gray-800 z-[60] p-3 shadow-lg relative transition-colors duration-300">
         <div class="relative w-full max-w-md mx-auto">
@@ -756,7 +766,8 @@ if ('serviceWorker' in navigator) {
 
         // --- Auth Logic (FIXED with safety checks) ---
         const authModal = document.getElementById('authModal'); const loginForm = document.getElementById('loginForm'); const registerForm = document.getElementById('registerForm'); const tabLogin = document.getElementById('tabLogin'); const tabRegister = document.getElementById('tabRegister'); const authError = document.getElementById('authError');
-        function openAuthModal() { authModal.classList.remove('hidden'); } function closeAuthModal() { authModal.classList.add('hidden'); authError.classList.add('hidden'); }
+        function openAuthModal(tab = 'login') { authModal.classList.remove('hidden'); switchAuthTab(tab); } 
+        function closeAuthModal() { authModal.classList.add('hidden'); authError.classList.add('hidden'); }
         function switchAuthTab(tab) {
             authError.classList.add('hidden');
             if (tab === 'login') { loginForm.classList.remove('hidden'); registerForm.classList.add('hidden'); tabLogin.classList.add('text-accent', 'border-b-2', 'border-accent'); tabLogin.classList.remove('text-gray-500'); tabRegister.classList.remove('text-accent', 'border-b-2', 'border-accent'); tabRegister.classList.add('text-gray-500'); }
@@ -779,7 +790,7 @@ if ('serviceWorker' in navigator) {
                 if (loadTime) payload.load_time = loadTime.value;
             }
 
-            fetch('auth_api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            fetch('auth_api.php', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             .then(res => res.json()).then(data => {
                 if (data.success) { window.location.href = window.location.pathname + '?v=' + new Date().getTime(); } 
                 else { authError.innerText = data.message; authError.classList.remove('hidden'); }
@@ -787,7 +798,7 @@ if ('serviceWorker' in navigator) {
                 authError.innerText = "Connection error. Try again."; authError.classList.remove('hidden');
             });
         }
-        function logoutUser() { fetch('auth_api.php', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'logout'}) }).then(() => window.location.href = window.location.pathname + '?v=' + new Date().getTime()); }
+        function logoutUser() { fetch('auth_api.php', { method: 'POST', credentials: 'same-origin', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'logout'}) }).then(() => window.location.href = window.location.pathname + '?v=' + new Date().getTime()); }
 
         // --- Global Clickaway Logic (FIXED for mobile tray) ---
         document.addEventListener('click', (e) => {
