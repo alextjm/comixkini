@@ -305,7 +305,7 @@ try {
             $targetMangaId = $request['manga_id'] ?? null;
 
             // Handle Universal VIP Codes
-            if (empty($mangaId)) {
+            if ($mangaId === 'UNIVERSAL') {
                 if (!empty($targetMangaId)) {
                     // Bind the universal code to the requested manga
                     $mangaId = $targetMangaId;
