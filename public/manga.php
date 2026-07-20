@@ -199,8 +199,16 @@ if ('serviceWorker' in navigator) {
                             </div>
                         </div>
                         <div class="absolute right-0 mt-2 w-48 dark:bg-[#1a1f29] bg-white border dark:border-gray-700 border-gray-200 rounded shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                            <?php if (strpos($_SESSION['username'], 'guest_') === 0): ?>
+                                <button onclick="openAuthModal('register')" class="w-full text-left px-4 py-3 sm:py-2 text-sm text-green-500 hover:text-green-400 font-bold dark:hover:bg-[#262c38] hover:bg-gray-100 border-b dark:border-gray-700 border-gray-200">Claim Account</button>
+                            <?php endif; ?>
                             <a href="profile.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent">My Library</a>
                             <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm dark:text-gray-300 text-gray-700 dark:hover:bg-[#262c38] hover:bg-gray-100 hover:text-accent border-b dark:border-gray-700 border-gray-200">ComixKini Status</a>
+                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                                <a href="admin.php" class="block px-4 py-3 sm:py-2 text-sm text-accent font-bold dark:hover:bg-[#262c38] hover:bg-gray-100 border-b dark:border-gray-700 border-gray-200 flex justify-between items-center">
+                                    Admin Panel <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                </a>
+                            <?php endif; ?>
                             <button onclick="logoutUser()" class="w-full text-left px-4 py-3 sm:py-2 text-sm text-red-500 hover:bg-red-500/10 font-bold">Logout</button>
                         </div>
                     </div>

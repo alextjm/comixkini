@@ -134,6 +134,11 @@ if ('serviceWorker' in navigator) {
                         <a href="index.php" class="block sm:hidden px-4 py-3 text-sm text-gray-300 hover:bg-[#262c38] hover:text-white">Back to Site</a>
                         <a href="profile.php" class="block px-4 py-3 sm:py-2 text-sm text-gray-300 hover:bg-[#262c38] hover:text-accent">My Library</a>
                         <a href="subscription.php" class="block px-4 py-3 sm:py-2 text-sm text-gray-300 hover:bg-[#262c38] hover:text-accent border-b border-gray-700">ComixKini Status</a>
+                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                            <a href="admin.php" class="block px-4 py-3 sm:py-2 text-sm text-accent font-bold hover:bg-[#262c38] border-b border-gray-700 flex justify-between items-center">
+                                Admin Panel <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </a>
+                        <?php endif; ?>
                         <button onclick="fetch('auth_api.php?action=logout').then(()=>window.location='index.php')" class="w-full text-left px-4 py-3 sm:py-2 text-sm text-red-500 hover:bg-red-500/10 font-bold">Logout</button>
                     </div>
                 </div>
