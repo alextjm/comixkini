@@ -41,6 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (empty($mangaId)) {
             $errorMessage = "Error: Manga ID is required to generate Title Codes.";
         }
+    } elseif ($_POST['action'] === 'generate_universal') {
+        $mangaId = 'UNIVERSAL';
+        $days = isset($_POST['days']) ? (int)$_POST['days'] : 365;
     }
 
     if (empty($errorMessage)) {
@@ -60,7 +63,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 continue;
             }
         }
-        $type = $mangaId ? "Title Codes ($mangaId)" : "VIP Codes";
+        
+        if ($mangaId === 'UNIVERSAL') {
+            $type = "Universal Codes";
+        } else {
+            $type = $mangaId ? "Title Codes ($mangaId)" : "VIP Codes";
+        }
+        
         $successMessage = "Successfully generated $generated $type for $days days!";
     }
 }
@@ -213,6 +222,28 @@ if ('serviceWorker' in navigator) {
                     </form>
                 </div>
 
+                <div class="bg-surface border border-green-500/30 rounded-lg p-6 shadow-xl">
+                    <h2 class="text-lg font-bold text-green-400 border-b border-gray-800 pb-2 mb-4">3. Generate Universal Codes</h2>
+                    <p class="text-xs text-gray-400 mb-4">Grants access to any 1 selected Title.</p>
+                    <form method="POST" class="flex flex-col gap-4">
+                        <input type="hidden" name="action" value="generate_universal">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Duration</label>
+                            <select name="days" class="w-full bg-[#1a1f29] border border-gray-700 rounded p-2.5 text-white text-sm focus:border-green-400 focus:outline-none">
+                                <option value="365">1 Year (365 Days)</option>
+                                <option value="180">6 Months (180 Days)</option>
+                                <option value="90">3 Months (90 Days)</option>
+                                <option value="30">1 Month (30 Days)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Quantity</label>
+                            <input type="number" name="amount" value="10" min="1" max="500" class="w-full bg-[#1a1f29] border border-gray-700 rounded p-2.5 text-white text-sm focus:border-green-400 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-green-500 hover:bg-green-400 text-black font-black py-3 rounded mt-2 transition-colors">GENERATE UNIVERSAL CODES</button>
+                    </form>
+                </div>
+
             </div>
 
             <div class="lg:col-span-2 flex flex-col gap-8">
@@ -240,6 +271,8 @@ if ('serviceWorker' in navigator) {
                                     <td class="py-2">
                                         <?php if(empty($code['manga_id'])): ?>
                                             <span class="text-gray-400 font-bold text-xs bg-gray-800 px-2 py-1 rounded">VIP SUB</span>
+                                        <?php elseif($code['manga_id'] === 'UNIVERSAL'): ?>
+                                            <span class="text-green-400 font-bold text-xs bg-green-900/30 px-2 py-1 rounded">UNIVERSAL</span>
                                         <?php else: ?>
                                             <span class="text-accent font-bold text-xs bg-accent/20 px-2 py-1 rounded" title="<?= htmlspecialchars($code['manga_id']) ?>">TITLE (Hover to view ID)</span>
                                         <?php endif; ?>
