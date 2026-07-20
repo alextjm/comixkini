@@ -302,6 +302,21 @@ try {
             $userId = $_SESSION['user_id'];
             $daysToAdd = (int)$voucher['duration_days'];
             $mangaId = $voucher['manga_id'] ?? null;
+            $targetMangaId = $request['manga_id'] ?? null;
+
+            // Handle Universal VIP Codes
+            if (empty($mangaId)) {
+                if (!empty($targetMangaId)) {
+                    // Bind the universal code to the requested manga
+                    $mangaId = $targetMangaId;
+                    $updBind = $pdo->prepare("UPDATE cp_vouchers SET manga_id = ? WHERE id = ?");
+                    $updBind->execute([$mangaId, $voucher['id']]);
+                } else {
+                    $pdo->rollBack();
+                    echo json_encode(['success' => false, 'message' => 'This is a Universal VIP Code. Please go to the specific manga page you want to unlock and redeem it there.']);
+                    exit;
+                }
+            }
 
             if (!empty($mangaId)) {
                 // ==========================================

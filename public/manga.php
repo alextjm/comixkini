@@ -230,6 +230,14 @@ if ('serviceWorker' in navigator) {
                 <div class="inline-block bg-green-900/30 border border-green-500/50 text-green-400 text-xs font-bold px-3 py-1.5 rounded mb-4">
                     ✓ Purchased Title - Access valid until <?= $ownExpiryText ?>
                 </div>
+            <?php elseif (!$isVIP): ?>
+                <div class="inline-block dark:bg-[#1a1f29] bg-gray-200 border dark:border-gray-700 border-gray-300 p-2.5 rounded mb-4 flex-col gap-2">
+                    <div class="flex gap-2 items-center">
+                        <input type="text" id="specificVoucherInput" placeholder="Enter Unlock Code" class="dark:bg-[#151921] bg-white border dark:border-gray-600 border-gray-300 text-xs rounded py-1.5 px-3 focus:outline-none dark:text-white text-black w-48 uppercase font-mono">
+                        <button onclick="redeemSpecificVoucher()" class="bg-accent hover:bg-cyan-400 text-black text-xs font-bold px-4 py-1.5 rounded transition-colors shadow-sm">Redeem</button>
+                    </div>
+                    <span id="specificVoucherMessage" class="mt-2 text-xs font-bold block hidden"></span>
+                </div>
             <?php endif; ?>
             <p class="text-[11px] text-gray-500 leading-relaxed mb-4 line-clamp-4 hover:line-clamp-none transition-all cursor-pointer"><?= htmlspecialchars($altTitlesString) ?></p>
 
@@ -476,6 +484,36 @@ if ('serviceWorker' in navigator) {
             .catch(err => { authError.innerText = "Connection error. Try again."; authError.classList.remove('hidden'); });
         }
         function logoutUser() { fetch('api.php?action=logout').then(() => window.location.reload()); }
+
+        function redeemSpecificVoucher() {
+            const code = document.getElementById('specificVoucherInput').value.trim();
+            const msgEl = document.getElementById('specificVoucherMessage');
+            if (!code) return;
+            msgEl.innerText = "Redeeming...";
+            msgEl.className = "mt-2 text-xs font-bold text-blue-500 block";
+            
+            fetch('api.php?action=redeem_voucher', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code, manga_id: '<?= $mangaId ?>' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    msgEl.innerText = "Success! " + (data.new_expiry || "Title Unlocked!");
+                    msgEl.className = "mt-2 text-xs font-bold text-green-500 block";
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    msgEl.innerText = data.message || "Failed to redeem.";
+                    msgEl.className = "mt-2 text-xs font-bold text-red-500 block";
+                }
+            })
+            .catch(err => {
+                msgEl.innerText = "Connection error.";
+                msgEl.className = "mt-2 text-xs font-bold text-red-500 block";
+            });
+        }
 
         function toggleBookmark(mangaId) {
             const isGuest = document.querySelector('button[onclick="openAuthModal()"]');
